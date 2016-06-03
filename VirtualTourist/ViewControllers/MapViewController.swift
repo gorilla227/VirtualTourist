@@ -8,18 +8,24 @@
 
 import UIKit
 import MapKit
+import CoreData
 
-class MapViewController: UIViewController {
+class MapViewController: UIViewController, MKMapViewDelegate, NSFetchedResultsControllerDelegate {
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var deletePinsTipLabel: UILabel!
-
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
         // Do any additional setup after loading the view.
         addEditButtonToNavigationBar()
+        addGestureForMapView()
+        fetchAllMapPins()
+        loadMapPins()
     }
 
+    // MARK: - UI functions
     func addEditButtonToNavigationBar() {
         let editButton = editButtonItem()
         navigationItem.setRightBarButtonItem(editButton, animated: false)
@@ -37,6 +43,87 @@ class MapViewController: UIViewController {
         }
     }
     
+    // MARK: - MapView functions
+    
+    func addGestureForMapView()  {
+        let gesture = UILongPressGestureRecognizer(target: self, action: #selector(MapViewController.addNewMapPin(_:)))
+        mapView.addGestureRecognizer(gesture)
+    }
+    
+    func addNewMapPin(sender: AnyObject) {
+        let gesture = sender as! UILongPressGestureRecognizer
+        if gesture.state == UIGestureRecognizerState.Ended && !editing {
+            let point = gesture.locationInView(mapView)
+            let coordinate = mapView.convertPoint(point, toCoordinateFromView: mapView)
+            print(coordinate)
+            
+            _ = MapPin(coordinate: coordinate, context: sharedContext)
+            saveContext()
+        }
+    }
+    
+    func loadMapPins() {
+        mapView.addAnnotations((fetchedResultController.fetchedObjects as? [MapPin])!)
+    }
+    
+    func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView) {
+        if editing {
+            // MARK: Delete mapPin
+            print("Deleting mapPin in MOC")
+            sharedContext.deleteObject(view.annotation as! MapPin)
+            saveContext()
+        } else {
+            // TODO: Push image collection viewController
+        }
+        
+    }
+    
+    
+    // MARK: - CoreData
+    var sharedContext: NSManagedObjectContext {
+        let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
+        return appDelegate.managedObjectContext
+    }
+    
+    lazy var fetchedResultController: NSFetchedResultsController = {
+        let fetchRequest = NSFetchRequest(entityName: "MapPin")
+        let sortDescriptor = NSSortDescriptor(key: "longitude", ascending: true)
+        fetchRequest.sortDescriptors = [sortDescriptor]
+        
+        
+        let frc = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: self.sharedContext, sectionNameKeyPath: nil, cacheName: nil)
+        frc.delegate = self
+        
+        return frc
+    }()
+    
+    func saveContext() {
+        let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
+        appDelegate.saveContext()
+    }
+    
+    func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
+        switch type {
+        case .Insert:
+            let mapPin = anObject as! MapPin
+            mapView.addAnnotation(mapPin)
+        case .Delete:
+            print("Removing mapPin from mapView")
+            let mapPin = anObject as! MapPin
+            mapView.removeAnnotation(mapPin)
+        default:
+            return
+        }
+    }
+    
+    func fetchAllMapPins() {
+        do {
+            try fetchedResultController.performFetch()
+        } catch {
+            print(error)
+            abort()
+        }
+    }
 
     /*
     // MARK: - Navigation

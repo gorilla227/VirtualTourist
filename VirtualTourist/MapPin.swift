@@ -28,6 +28,5 @@ class MapPin: NSManagedObject, MKAnnotation {
         
         latitude = coordinate.latitude
         longitude = coordinate.longitude
-        images = [FlickrImage]()
     }
 }

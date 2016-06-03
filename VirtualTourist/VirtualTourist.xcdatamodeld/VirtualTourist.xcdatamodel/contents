@@ -8,10 +8,10 @@
     <entity name="MapPin" representedClassName=".MapPin" syncable="YES">
         <attribute name="latitude" attributeType="Double" minValueString="-180" maxValueString="180" defaultValueString="0.0" syncable="YES"/>
         <attribute name="longitude" attributeType="Double" minValueString="-180" maxValueString="180" defaultValueString="0.0" syncable="YES"/>
-        <relationship name="images" toMany="YES" deletionRule="Nullify" destinationEntity="FlickrImage" inverseName="location" inverseEntity="FlickrImage" syncable="YES"/>
+        <relationship name="images" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="FlickrImage" inverseName="location" inverseEntity="FlickrImage" syncable="YES"/>
     </entity>
     <elements>
-        <element name="MapPin" positionX="-155" positionY="0" width="128" height="88"/>
         <element name="FlickrImage" positionX="99" positionY="15" width="128" height="88"/>
+        <element name="MapPin" positionX="-155" positionY="0" width="128" height="90"/>
     </elements>
 </model>
