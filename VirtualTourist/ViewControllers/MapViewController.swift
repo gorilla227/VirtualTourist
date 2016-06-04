@@ -24,6 +24,11 @@ class MapViewController: UIViewController, MKMapViewDelegate, NSFetchedResultsCo
         fetchAllMapPins()
         loadMapPins()
     }
+    
+    override func viewWillAppear(animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setToolbarHidden(true, animated: true)
+    }
 
     // MARK: - UI functions
     func addEditButtonToNavigationBar() {
@@ -73,7 +78,9 @@ class MapViewController: UIViewController, MKMapViewDelegate, NSFetchedResultsCo
             sharedContext.deleteObject(view.annotation as! MapPin)
             saveContext()
         } else {
-            // TODO: Push image collection viewController
+            // MARK: Push image collection viewController
+            mapView.deselectAnnotation(view.annotation, animated: true)
+            performSegueWithIdentifier("ShowImageCollection", sender: view.annotation)
         }
         
     }
@@ -125,14 +132,16 @@ class MapViewController: UIViewController, MKMapViewDelegate, NSFetchedResultsCo
         }
     }
 
-    /*
     // MARK: - Navigation
 
     // In a storyboard-based application, you will often want to do a little preparation before navigation
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         // Get the new view controller using segue.destinationViewController.
         // Pass the selected object to the new view controller.
+        if segue.identifier == "ShowImageCollection" {
+            let destVC = segue.destinationViewController as! FlickrImageCollectionViewController
+            destVC.mapPin = sender as! MapPin
+        }
     }
-    */
-
+    
 }
