@@ -16,6 +16,6 @@ extension MapPin {
 
     @NSManaged var latitude: Double
     @NSManaged var longitude: Double
-    @NSManaged var images: NSOrderedSet?
+    @NSManaged var images: NSMutableOrderedSet
 
 }

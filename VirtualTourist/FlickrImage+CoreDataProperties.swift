@@ -14,7 +14,7 @@ import CoreData
 
 extension FlickrImage {
 
-    @NSManaged var imagePath: String?
+    @NSManaged var imagePath: String
     @NSManaged var image: NSData?
     @NSManaged var location: MapPin?
 

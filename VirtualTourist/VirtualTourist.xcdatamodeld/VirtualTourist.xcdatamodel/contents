@@ -3,15 +3,15 @@
     <entity name="FlickrImage" representedClassName=".FlickrImage" syncable="YES">
         <attribute name="image" optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES" syncable="YES"/>
         <attribute name="imagePath" attributeType="String" syncable="YES"/>
-        <relationship name="location" maxCount="1" deletionRule="Cascade" destinationEntity="MapPin" inverseName="images" inverseEntity="MapPin" syncable="YES"/>
+        <relationship name="location" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MapPin" inverseName="images" inverseEntity="MapPin" syncable="YES"/>
     </entity>
     <entity name="MapPin" representedClassName=".MapPin" syncable="YES">
         <attribute name="latitude" attributeType="Double" minValueString="-180" maxValueString="180" defaultValueString="0.0" syncable="YES"/>
         <attribute name="longitude" attributeType="Double" minValueString="-180" maxValueString="180" defaultValueString="0.0" syncable="YES"/>
-        <relationship name="images" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="FlickrImage" inverseName="location" inverseEntity="FlickrImage" syncable="YES"/>
+        <relationship name="images" toMany="YES" deletionRule="Cascade" ordered="YES" destinationEntity="FlickrImage" inverseName="location" inverseEntity="FlickrImage" syncable="YES"/>
     </entity>
     <elements>
-        <element name="FlickrImage" positionX="99" positionY="15" width="128" height="88"/>
+        <element name="FlickrImage" positionX="99" positionY="15" width="128" height="90"/>
         <element name="MapPin" positionX="-155" positionY="0" width="128" height="90"/>
     </elements>
 </model>

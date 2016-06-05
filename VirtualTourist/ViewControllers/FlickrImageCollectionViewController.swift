@@ -10,7 +10,7 @@ import UIKit
 import MapKit
 import CoreData
 
-class FlickrImageCollectionViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource {
+class FlickrImageCollectionViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, NSFetchedResultsControllerDelegate {
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var flowLayout: UICollectionViewFlowLayout!
@@ -19,7 +19,7 @@ class FlickrImageCollectionViewController: UIViewController, UICollectionViewDel
     
     let PerPage: Int = 18
     var mapPin: MapPin!
-    let flickAPI = FlickrAPI.SharedInstance
+    let flickrAPI = FlickrAPI.SharedInstance
     var maxPages: Int = 0
 
     override func viewDidLoad() {
@@ -32,7 +32,11 @@ class FlickrImageCollectionViewController: UIViewController, UICollectionViewDel
         configureCollectionViewFlowLayout()
         
         // TODO: Need check persistent data first
-        requestMaxPages()
+        print(mapPin.images.count)
+        if mapPin.images.count == 0 {
+            fetchFlickrImage()
+        }
+//        requestMaxPages()
     }
     
     func displayError(errorMessage: String) {
@@ -83,7 +87,7 @@ class FlickrImageCollectionViewController: UIViewController, UICollectionViewDel
         ]
         
         setViewEnabled(false)
-        flickAPI.requestMaxPages(parameters) { (result, errorMessage) in
+        flickrAPI.requestMaxPages(parameters) { (result, errorMessage) in
             guard errorMessage == nil else {
                 self.displayError(errorMessage!)
                 return
@@ -113,13 +117,22 @@ class FlickrImageCollectionViewController: UIViewController, UICollectionViewDel
         
         setViewEnabled(false)
         
-        flickAPI.requestImageList(parameters) { (result, errorMessage) in
+        flickrAPI.requestImageList(parameters) { (result, errorMessage) in
             guard errorMessage == nil else {
                 self.displayError(errorMessage!)
                 return
             }
             
-            print(result)
+            guard let imagePaths = result else {
+                self.displayError("No image paths return")
+                return
+            }
+            
+            for imagePath in imagePaths {
+                _ = FlickrImage(mapPin: self.mapPin, imagePath: imagePath, context: self.sharedContext)
+                self.saveContext()
+            }
+            
             self.setViewEnabled(true)
         }
     }
@@ -134,24 +147,69 @@ class FlickrImageCollectionViewController: UIViewController, UICollectionViewDel
     }
     
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 18
+//        let sectionInfo = fetchedResultController.sections![section] as NSFetchedResultsSectionInfo
+//        return sectionInfo.numberOfObjects
+        return mapPin.images.count
     }
     
     func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier("imageCell", forIndexPath: indexPath) as! FlickrImageCell
+        let flickrImage = mapPin.images.objectAtIndex(indexPath.row) as! FlickrImage
+//        cell.configureCell(fetchedResultController.objectAtIndexPath(indexPath) as! FlickrImage)
+        cell.configureCell(flickrImage)
+        
         return cell
     }
+    
+    // MARK: - CoreData functions
+    var sharedContext: NSManagedObjectContext {
+        let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
+        return appDelegate.managedObjectContext
+    }
+    
+    lazy var fetchedResultController: NSFetchedResultsController = {
+        let fetchRequest = NSFetchRequest(entityName: "FlickrImage")
+        let sortDescriptor = NSSortDescriptor(key: "imagePath", ascending: true)
+        fetchRequest.sortDescriptors = [sortDescriptor]
+        fetchRequest.predicate = NSPredicate(format: "location == %@", self.mapPin)
+        
+        let frc = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: self.sharedContext, sectionNameKeyPath: nil, cacheName: nil)
+        frc.delegate = self
+        
+        return frc
+    }()
+    
+    func saveContext() {
+        let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
+        appDelegate.saveContext()
+    }
+    
+    func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
+        switch type {
+        case .Insert:
+            collectionView.insertItemsAtIndexPaths([newIndexPath!])
+        case .Delete:
+            collectionView.deleteItemsAtIndexPaths([indexPath!])
+        default:
+            return
+        }
+    }
+    
+    func fetchFlickrImage() {
+        do {
+            print("FetchFlickrImages")
+            try fetchedResultController.performFetch()
+            if ((fetchedResultController.fetchedObjects?.isEmpty) != nil) {
+                requestMaxPages()
+            }
+        } catch {
+            print(error)
+            abort()
+        }
+    }
 
+    // MARK: - IBActions
     @IBAction func collectionButtonOnClicked(sender: AnyObject) {
     }
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
-    }
-    */
 
 }
