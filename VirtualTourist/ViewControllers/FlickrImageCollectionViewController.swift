@@ -242,7 +242,20 @@ class FlickrImageCollectionViewController: UIViewController, UICollectionViewDel
     @IBAction func collectionButtonOnClicked(sender: AnyObject) {
         switch collectionButtonState {
         case .NewCollection:
-            return
+            // Clear all flickrImages
+            let allFlickrImages = fetchedResultController.fetchedObjects as! [FlickrImage]
+            for flickrImage in allFlickrImages {
+                sharedContext.deleteObject(flickrImage)
+                saveContext()
+            }
+            
+            // Get new collection
+            if maxPages == 0 {
+                requestMaxPages()
+            } else {
+                let randomPageId = Int(arc4random_uniform(UInt32(self.maxPages)))
+                requestPhotoList(randomPageId)
+            }
         case .RemoveSelectedPictures:
             var deleteFlickImages = [FlickrImage]()
             for indexPath in collectionView.indexPathsForSelectedItems()! {
