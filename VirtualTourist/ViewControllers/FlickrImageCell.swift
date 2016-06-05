@@ -12,11 +12,22 @@ class FlickrImageCell: UICollectionViewCell {
     @IBOutlet weak var imageView: UIImageView!
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
-    func configureCell(flickrImage: FlickrImage) {
+    func configureCell(flickrImage: FlickrImage, isSelected: Bool) {
         if let imageData = flickrImage.image {
             imageView.image = UIImage(data: imageData)
         } else {
             loadImage(flickrImage)
+        }
+        
+        changeSelectionStatus(isSelected)
+    }
+    
+    func changeSelectionStatus(isSelected: Bool) {
+        // Set UI base on selection status
+        if isSelected {
+            contentView.alpha = 0.2
+        } else {
+            contentView.alpha = 1.0
         }
     }
     

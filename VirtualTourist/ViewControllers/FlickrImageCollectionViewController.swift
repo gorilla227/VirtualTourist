@@ -21,22 +21,30 @@ class FlickrImageCollectionViewController: UIViewController, UICollectionViewDel
     var mapPin: MapPin!
     let flickrAPI = FlickrAPI.SharedInstance
     var maxPages: Int = 0
+    var collectionButtonState: CollectionButtonState = .NewCollection
+    
+    enum CollectionButtonState {
+        case NewCollection, RemoveSelectedPictures
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
         // Do any additional setup after loading the view.
-//        collectionView.registerClass(UICollectionViewCell.self, forCellWithReuseIdentifier: "imageCell")
         navigationController?.setToolbarHidden(false, animated: false)
         initializeMap()
-        configureCollectionViewFlowLayout()
+        collectionView.allowsMultipleSelection = true
         
         // TODO: Need check persistent data first
-        print(mapPin.images.count)
+        fetchFlickrImage()
+        
         if mapPin.images.count == 0 {
-            fetchFlickrImage()
+            requestMaxPages()
         }
-//        requestMaxPages()
+    }
+    
+    override func viewDidLayoutSubviews() {
+        configureCollectionViewFlowLayout()
     }
     
     func displayError(errorMessage: String) {
@@ -140,25 +148,48 @@ class FlickrImageCollectionViewController: UIViewController, UICollectionViewDel
     // MARK: - CollectionView functions
     func configureCollectionViewFlowLayout() {
         let space: CGFloat = 3.0
-        let dimension = (view.frame.size.width - space * 2) / 3.0
+        let dimension = (collectionView.frame.size.width - space * 2) / 3.0
         flowLayout.minimumLineSpacing = space
         flowLayout.minimumInteritemSpacing = space
         flowLayout.itemSize = CGSizeMake(dimension, dimension)
     }
     
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-//        let sectionInfo = fetchedResultController.sections![section] as NSFetchedResultsSectionInfo
-//        return sectionInfo.numberOfObjects
-        return mapPin.images.count
+        let sectionInfo = fetchedResultController.sections![section] as NSFetchedResultsSectionInfo
+        return sectionInfo.numberOfObjects
     }
     
     func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier("imageCell", forIndexPath: indexPath) as! FlickrImageCell
-        let flickrImage = mapPin.images.objectAtIndex(indexPath.row) as! FlickrImage
-//        cell.configureCell(fetchedResultController.objectAtIndexPath(indexPath) as! FlickrImage)
-        cell.configureCell(flickrImage)
+        let flickrImage = fetchedResultController.objectAtIndexPath(indexPath) as! FlickrImage
+
+        cell.configureCell(flickrImage, isSelected: collectionView.indexPathsForSelectedItems()!.contains(indexPath))
         
         return cell
+    }
+    
+    func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
+        print(indexPath)
+        let cell = collectionView.cellForItemAtIndexPath(indexPath) as? FlickrImageCell
+        cell?.changeSelectionStatus(true)
+        changeCollectionButtonStats()
+    }
+    
+    func collectionView(collectionView: UICollectionView, didDeselectItemAtIndexPath indexPath: NSIndexPath) {
+        print(indexPath)
+        let cell = collectionView.cellForItemAtIndexPath(indexPath) as? FlickrImageCell
+        cell?.changeSelectionStatus(false)
+        changeCollectionButtonStats()
+    }
+    
+    func changeCollectionButtonStats() {
+        if collectionView.indexPathsForSelectedItems()!.isEmpty {
+            collectionButtonState = .NewCollection
+            collectionButton.title = "New Collection"
+        } else {
+            collectionButtonState = .RemoveSelectedPictures
+            collectionButton.title = "Remove Selected Pictures"
+        }
     }
     
     // MARK: - CoreData functions
@@ -185,10 +216,12 @@ class FlickrImageCollectionViewController: UIViewController, UICollectionViewDel
     }
     
     func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
+        
         switch type {
         case .Insert:
             collectionView.insertItemsAtIndexPaths([newIndexPath!])
         case .Delete:
+            print("Delete image at \(indexPath)")
             collectionView.deleteItemsAtIndexPaths([indexPath!])
         default:
             return
@@ -199,9 +232,6 @@ class FlickrImageCollectionViewController: UIViewController, UICollectionViewDel
         do {
             print("FetchFlickrImages")
             try fetchedResultController.performFetch()
-            if ((fetchedResultController.fetchedObjects?.isEmpty) != nil) {
-                requestMaxPages()
-            }
         } catch {
             print(error)
             abort()
@@ -210,6 +240,24 @@ class FlickrImageCollectionViewController: UIViewController, UICollectionViewDel
 
     // MARK: - IBActions
     @IBAction func collectionButtonOnClicked(sender: AnyObject) {
+        switch collectionButtonState {
+        case .NewCollection:
+            return
+        case .RemoveSelectedPictures:
+            var deleteFlickImages = [FlickrImage]()
+            for indexPath in collectionView.indexPathsForSelectedItems()! {
+                let flickrImage = fetchedResultController.objectAtIndexPath(indexPath) as! FlickrImage
+                deleteFlickImages.append(flickrImage)
+            }
+            
+            for flickrImage in deleteFlickImages{
+                sharedContext.deleteObject(flickrImage)
+                saveContext()
+            }
+            
+            collectionButtonState = .NewCollection
+            collectionButton.title = "New Collection"
+        }
     }
 
 }
