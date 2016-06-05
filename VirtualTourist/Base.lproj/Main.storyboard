@@ -120,9 +120,14 @@
                                     <outlet property="delegate" destination="ph2-3T-Jq2" id="64I-K4-ee5"/>
                                 </connections>
                             </collectionView>
+                            <activityIndicatorView hidden="YES" opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" hidesWhenStopped="YES" style="whiteLarge" translatesAutoresizingMaskIntoConstraints="NO" id="Ev0-AR-1fU">
+                                <rect key="frame" x="282" y="281" width="37" height="37"/>
+                            </activityIndicatorView>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
+                            <constraint firstItem="Ev0-AR-1fU" firstAttribute="centerX" secondItem="7dr-BJ-QdN" secondAttribute="centerX" id="0Tl-ib-HR2"/>
+                            <constraint firstItem="Ev0-AR-1fU" firstAttribute="centerY" secondItem="7dr-BJ-QdN" secondAttribute="centerY" id="4Ed-wb-q4p"/>
                             <constraint firstItem="AIs-2F-kAL" firstAttribute="top" secondItem="Ynh-x7-HiK" secondAttribute="bottom" id="6pd-sc-xeD"/>
                             <constraint firstItem="Ynh-x7-HiK" firstAttribute="width" secondItem="AIs-2F-kAL" secondAttribute="height" multiplier="3:1" id="Cpn-Zb-yjh"/>
                             <constraint firstItem="AIs-2F-kAL" firstAttribute="leading" secondItem="7dr-BJ-QdN" secondAttribute="leadingMargin" constant="-20" id="Jpd-ID-XK7"/>
@@ -141,11 +146,17 @@
                     </view>
                     <toolbarItems>
                         <barButtonItem style="plain" systemItem="flexibleSpace" id="RG9-cW-bpl"/>
-                        <barButtonItem title="New Collection" id="XDj-bx-IY9"/>
+                        <barButtonItem title="New Collection" id="XDj-bx-IY9">
+                            <connections>
+                                <action selector="collectionButtonOnClicked:" destination="ph2-3T-Jq2" id="RjJ-WZ-qa6"/>
+                            </connections>
+                        </barButtonItem>
                         <barButtonItem style="plain" systemItem="flexibleSpace" id="RVd-dK-DUj"/>
                     </toolbarItems>
                     <simulatedToolbarMetrics key="simulatedBottomBarMetrics"/>
                     <connections>
+                        <outlet property="activityIndicator" destination="Ev0-AR-1fU" id="3Pr-Pa-cE4"/>
+                        <outlet property="collectionButton" destination="XDj-bx-IY9" id="kks-Ri-NFc"/>
                         <outlet property="collectionView" destination="AIs-2F-kAL" id="9xS-gd-ddp"/>
                         <outlet property="flowLayout" destination="6aX-NG-TEu" id="YAF-um-Ove"/>
                         <outlet property="mapView" destination="Ynh-x7-HiK" id="8Qy-bC-KhJ"/>
