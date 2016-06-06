@@ -61,7 +61,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, NSFetchedResultsCo
     
     func addNewMapPin(sender: AnyObject) {
         let gesture = sender as! UILongPressGestureRecognizer
-        if gesture.state == UIGestureRecognizerState.Ended && !editing {
+        if gesture.state == UIGestureRecognizerState.Began && !editing {
             let point = gesture.locationInView(mapView)
             let coordinate = mapView.convertPoint(point, toCoordinateFromView: mapView)
             print(coordinate)
