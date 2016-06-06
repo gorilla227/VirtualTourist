@@ -15,7 +15,7 @@ class MapPin: NSManagedObject, MKAnnotation {
 
 // Insert code here to add functionality to your managed object subclass
     var coordinate: CLLocationCoordinate2D {
-       return CLLocationCoordinate2D(latitude: self.latitude, longitude: self.longitude)
+       return CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
     }
     
     override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?) {

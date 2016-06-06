@@ -22,6 +22,7 @@ class FlickrImageCollectionViewController: UIViewController, UICollectionViewDel
     let flickrAPI = FlickrAPI.SharedInstance
     var maxPages: Int = 0
     var collectionButtonState: CollectionButtonState = .NewCollection
+    let sharedContext = NSManagedObjectContext(concurrencyType: .PrivateQueueConcurrencyType)
     
     enum CollectionButtonState {
         case NewCollection, RemoveSelectedPictures
@@ -29,7 +30,9 @@ class FlickrImageCollectionViewController: UIViewController, UICollectionViewDel
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
+        let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
+        sharedContext.parentContext = appDelegate.managedObjectContext
         // Do any additional setup after loading the view.
         navigationController?.setToolbarHidden(false, animated: false)
         initializeMap()
@@ -193,10 +196,14 @@ class FlickrImageCollectionViewController: UIViewController, UICollectionViewDel
     }
     
     // MARK: - CoreData functions
-    var sharedContext: NSManagedObjectContext {
-        let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
-        return appDelegate.managedObjectContext
-    }
+//    var sharedContext: NSManagedObjectContext {
+//        let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
+////        return appDelegate.managedObjectContext
+//        
+//        let moc = NSManagedObjectContext(concurrencyType: .PrivateQueueConcurrencyType)
+//        moc.parentContext = appDelegate.managedObjectContext
+//        return moc
+//    }
     
     lazy var fetchedResultController: NSFetchedResultsController = {
         let fetchRequest = NSFetchRequest(entityName: "FlickrImage")
@@ -211,8 +218,16 @@ class FlickrImageCollectionViewController: UIViewController, UICollectionViewDel
     }()
     
     func saveContext() {
-        let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
-        appDelegate.saveContext()
+//        let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
+//        appDelegate.saveContext()
+        
+        sharedContext.performBlock {
+            do {
+                try self.sharedContext.save()
+            } catch {
+                fatalError("Failure to save context: \(error)")
+            }
+        }
     }
     
     func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
