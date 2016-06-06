@@ -14,6 +14,10 @@ class MapViewController: UIViewController, MKMapViewDelegate, NSFetchedResultsCo
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var deletePinsTipLabel: UILabel!
     
+    let kCenterLat = "kCenterLat"
+    let kCenterLon = "kCenterLon"
+    let kSpanLat = "kSpanLat"
+    let kSpanLon = "kSpanLon"
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -69,6 +73,14 @@ class MapViewController: UIViewController, MKMapViewDelegate, NSFetchedResultsCo
     
     func loadMapPins() {
         mapView.addAnnotations((fetchedResultController.fetchedObjects as? [MapPin])!)
+        
+        if let centerLat = NSUserDefaults.standardUserDefaults().objectForKey(kCenterLat) as? Double,
+        let centerLon = NSUserDefaults.standardUserDefaults().objectForKey(kCenterLon) as? Double,
+        let spanLat = NSUserDefaults.standardUserDefaults().objectForKey(kSpanLat) as? Double,
+        let spanLon = NSUserDefaults.standardUserDefaults().objectForKey(kSpanLon) as? Double {
+            let region = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: centerLat, longitude: centerLon), span: MKCoordinateSpan(latitudeDelta: spanLat, longitudeDelta: spanLon))
+            mapView.setRegion(region, animated: false)
+        }
     }
     
     func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView) {
@@ -82,7 +94,13 @@ class MapViewController: UIViewController, MKMapViewDelegate, NSFetchedResultsCo
             mapView.deselectAnnotation(view.annotation, animated: true)
             performSegueWithIdentifier("ShowImageCollection", sender: view.annotation)
         }
-        
+    }
+    
+    func mapView(mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
+        NSUserDefaults.standardUserDefaults().setDouble(mapView.region.center.latitude, forKey: kCenterLat)
+        NSUserDefaults.standardUserDefaults().setDouble(mapView.region.center.longitude, forKey: kCenterLon)
+        NSUserDefaults.standardUserDefaults().setDouble(mapView.region.span.latitudeDelta, forKey: kSpanLat)
+        NSUserDefaults.standardUserDefaults().setDouble(mapView.region.span.longitudeDelta, forKey: kSpanLon)
     }
     
     
